@@ -397,7 +397,7 @@
                     Or enter serial number manually:
                 </p>
                 <div class="input-group">
-                    <input type="text" id="serialInput" placeholder="Enter serial number" onkeypress="handleEnter(event)">
+                    <input type="text" id="serialInput" placeholder="e.g. TS-AA-001-0015 or V1-0040101" onkeypress="handleEnter(event)">
                     <button class="btn btn-primary" onclick="lookupSerial()" style="width: 200px; padding: 15px 30px;">
                         Search
                     </button>
@@ -571,7 +571,7 @@
 
                 if (!serialParts) {
                     hideLoading();
-                    showError(`Invalid serial number format. Expected format: TS-AA-000-0000 (e.g., TS-AA-001-0015)`);
+                    showError(`Invalid serial number format.\nExpected formats:\n• TS-AA-000-0000 (e.g., TS-AA-001-0015)\n• V1-0000000 (e.g., V1-0040101)`);
                     return;
                 }
 
@@ -579,8 +579,13 @@
                 let data;
 
                 if (serialParts.searchAllProducts) {
-                    // Numeric barcode - search across all product types (58, 59, 60)
-                    filterFormula = `OR({Numero materia prima}=58, {Numero materia prima}=59, {Numero materia prima}=60)`;
+                    if (serialParts.isVFormat) {
+                        // V-format serial - search across new product types (17, 18, 19)
+                        filterFormula = `OR({Numero materia prima}=17, {Numero materia prima}=18, {Numero materia prima}=19)`;
+                    } else {
+                        // Numeric barcode - search across legacy product types (58, 59, 60)
+                        filterFormula = `OR({Numero materia prima}=58, {Numero materia prima}=59, {Numero materia prima}=60)`;
+                    }
                 } else {
                     // Convert product code to Numero materia prima
                     const productCodeMap = {
@@ -629,8 +634,8 @@
                     // Build the proper serial number format for display
                     let displaySerial = serialNumber;
 
-                    if (serialParts.searchAllProducts) {
-                        // Get the actual product type from the found record
+                    if (serialParts.searchAllProducts && !serialParts.isVFormat) {
+                        // Numeric barcode - reconstruct TS format display
                         let productNum = matchingRecord.fields['Product Type Number'] || matchingRecord.fields['Numero materia prima'];
                         if (Array.isArray(productNum) && productNum.length > 0) {
                             productNum = productNum[0];
@@ -645,6 +650,7 @@
                         const productCode = productCodeMap[Number(productNum)] || 'XX';
                         displaySerial = `TS-${productCode}-${String(serialParts.firstPart).padStart(3, '0')}-${String(serialParts.secondPart).padStart(4, '0')}`;
                     }
+                    // V-format: displaySerial stays as entered (e.g., V1-0040101)
 
                     displayResult(matchingRecord.fields, displaySerial);
                 } else {
@@ -659,7 +665,7 @@
         }
 
         // ========================================
-        // Parse Serial Number (TS-AA-000-0000 or numeric barcode)
+        // Parse Serial Number (TS-AA-000-0000, V1-0000000, or numeric barcode)
         // ========================================
         function parseSerialNumber(serial) {
             // Remove any extra spaces
@@ -675,7 +681,23 @@
                     firstPart: parseInt(match[2], 10),
                     secondPart: parseInt(match[3], 10),
                     fullSerial: serial,
-                    searchAllProducts: false
+                    searchAllProducts: false,
+                    isVFormat: false
+                };
+            }
+
+            // Match format: V1-0040101 (V + digit for (000) field + hyphen + digits for (0000) field)
+            const vRegex = /^V(\d)-(\d+)$/i;
+            const vMatch = serial.match(vRegex);
+
+            if (vMatch) {
+                return {
+                    productCode: null,
+                    firstPart: parseInt(vMatch[1], 10),
+                    secondPart: parseInt(vMatch[2], 10),
+                    fullSerial: serial,
+                    searchAllProducts: true,
+                    isVFormat: true
                 };
             }
 
@@ -693,7 +715,8 @@
                     firstPart: firstPart,
                     secondPart: secondPart,
                     fullSerial: `TS-XX-${String(firstPart).padStart(3, '0')}-${String(secondPart).padStart(4, '0')}`,
-                    searchAllProducts: true // Flag to search across all product types
+                    searchAllProducts: true, // Flag to search across all product types
+                    isVFormat: false
                 };
             }
 
@@ -736,10 +759,12 @@
         function isSerialInRange(serialFirst, serialSecond,
                                 initialFirst, initialSecond,
                                 finalFirst, finalSecond) {
-            // Convert to comparable numbers (e.g., 001-0015 becomes 1000015)
-            const serialNum = serialFirst * 10000 + serialSecond;
-            const initialNum = initialFirst * 10000 + initialSecond;
-            const finalNum = finalFirst * 10000 + finalSecond;
+            // Convert to comparable numbers (e.g., 001-0015 becomes 10000015)
+            // Multiplier is 10000000 to support both TS format (0000 up to 9999)
+            // and V format (0000000 up to 9999999)
+            const serialNum = serialFirst * 10000000 + serialSecond;
+            const initialNum = initialFirst * 10000000 + initialSecond;
+            const finalNum = finalFirst * 10000000 + finalSecond;
 
             return serialNum >= initialNum && serialNum <= finalNum;
         }
@@ -802,16 +827,16 @@
                     productNumValue = Number(productNum);
                 }
 
-                if (productNumValue === 58) {
-                    productCode = 'AA';
+                if (productNumValue === 58 || productNumValue === 17) {
+                    productCode = productNumValue === 58 ? 'AA' : 'V';
                     productDescription = 'Single-use Temperature Datalogger';
                     temperatureRange = '-20°C to +60°C';
-                } else if (productNumValue === 59) {
-                    productCode = 'AB';
+                } else if (productNumValue === 59 || productNumValue === 18) {
+                    productCode = productNumValue === 59 ? 'AB' : 'V';
                     productDescription = 'Frozen Temperature Datalogger';
                     temperatureRange = '-30°C to +60°C';
-                } else if (productNumValue === 60) {
-                    productCode = 'AC';
+                } else if (productNumValue === 60 || productNumValue === 19) {
+                    productCode = productNumValue === 60 ? 'AC' : 'V';
                     productDescription = 'Temperature & Humidity Datalogger';
                     temperatureRange = '-20°C to +60°C';
                 }
