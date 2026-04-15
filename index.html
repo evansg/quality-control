@@ -1,0 +1,1063 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Verification</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #000000 0%, #565F64 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #00A19B 0%, #00A19B 100%);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 30px 20px;
+        }
+
+        .scan-section {
+            margin-bottom: 30px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 15px;
+            font-size: 16px;
+            font-weight: 600;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 10px;
+        }
+
+        .btn-primary {
+            background: #2C3E50;
+            border: 2px solid #00A19B;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary:hover {
+            background: #34495E;
+            box-shadow: 0 0 20px rgba(0, 161, 155, 0.6),
+                        0 0 40px rgba(0, 161, 155, 0.3);
+            border-color: #00D4CC;
+            transform: translateY(-1px);
+        }
+
+        .btn-primary:active {
+            background: #00A19B;
+            border-color: #00A19B;
+            box-shadow: 0 0 15px rgba(0, 161, 155, 0.8);
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: rgba(200, 204, 206, 0.15);
+            border: 2px solid #C8CCCE;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #C8CCCE;
+            color: #2C3E50;
+            border-color: #C8CCCE;
+            transform: translateY(-1px);
+        }
+
+        #reader {
+            border: 2px solid #00A19B;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 15px;
+            display: none;
+        }
+
+        .manual-entry {
+            margin-top: 20px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            align-items: center;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 15px;
+            font-size: 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #00A19B;
+        }
+
+        .result-card {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 25px;
+            display: none;
+        }
+
+        .result-card.show {
+            display: block;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .result-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #00A19B;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: #666;
+        }
+
+        .info-value {
+            color: #333;
+            text-align: right;
+        }
+
+        .error {
+            background: #fee;
+            color: #c33;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            display: none;
+            white-space: pre-line; /* Preserve line breaks */
+            line-height: 1.6;
+            font-size: 14px;
+        }
+
+        .error.show {
+            display: block;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            display: none;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #00A19B;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .qc-status {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .qc-pass {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .qc-fail {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        /* ========================================
+           MOBILE OPTIMIZATIONS
+           ======================================== */
+
+        /* Prevent zoom on input focus (iOS Safari) */
+        @media screen and (max-width: 768px) {
+            input[type="text"] {
+                font-size: 16px; /* Prevents iOS zoom */
+            }
+
+            body {
+                padding: 10px; /* Less padding on mobile */
+            }
+
+            .container {
+                border-radius: 15px; /* Smaller radius on mobile */
+            }
+
+            .header h1 {
+                font-size: 24px; /* Smaller title on mobile */
+            }
+
+            .header p {
+                font-size: 13px;
+            }
+
+            .content {
+                padding: 20px 15px; /* Less padding on mobile */
+            }
+
+            .btn {
+                padding: 14px; /* Slightly smaller buttons */
+                font-size: 15px;
+                min-height: 48px; /* Touch-friendly minimum */
+            }
+
+            .info-row {
+                flex-direction: column; /* Stack on mobile */
+                align-items: flex-start;
+                padding: 15px 0;
+            }
+
+            .info-label {
+                font-weight: 600;
+                color: #666;
+                margin-bottom: 5px;
+                font-size: 14px;
+            }
+
+            .info-value {
+                color: #333;
+                text-align: left;
+                font-size: 15px;
+                word-break: break-word; /* Prevent overflow */
+            }
+
+            .result-card {
+                padding: 20px 15px; /* Less padding on mobile */
+            }
+
+            .qc-status {
+                font-size: 13px;
+                padding: 4px 12px;
+                display: inline-block;
+                margin-bottom: 5px;
+            }
+
+            #reader {
+                margin-top: 10px;
+            }
+
+            /* Make scanner video responsive */
+            #reader video {
+                width: 100% !important;
+                height: auto !important;
+                max-height: 300px;
+            }
+        }
+
+        /* Extra small phones */
+        @media screen and (max-width: 380px) {
+            .header h1 {
+                font-size: 20px;
+            }
+
+            .btn {
+                font-size: 14px;
+                padding: 12px;
+            }
+
+            .info-label,
+            .info-value {
+                font-size: 14px;
+            }
+
+            .result-title {
+                font-size: 18px;
+            }
+        }
+
+        /* Landscape mode on phones */
+        @media screen and (max-height: 500px) and (orientation: landscape) {
+            .header {
+                padding: 15px 20px;
+            }
+
+            .header h1 {
+                font-size: 20px;
+                margin-bottom: 5px;
+            }
+
+            .content {
+                padding: 15px;
+            }
+        }
+
+        /* Touch-friendly improvements */
+        @media (hover: none) and (pointer: coarse) {
+            /* This targets touch devices */
+            .btn {
+                min-height: 48px; /* iOS/Android minimum touch target */
+            }
+
+            input[type="text"] {
+                min-height: 48px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 Product Verification</h1>
+            <p>Scan or enter serial number to verify product authenticity</p>
+        </div>
+
+        <div class="content">
+            <div class="scan-section">
+                <button id="scanBtn" class="btn btn-primary" onclick="startScanner()">
+                    📷 Scan Barcode with Camera
+                </button>
+                <button id="stopBtn" class="btn btn-secondary" onclick="stopScanner()" style="display: none;">
+                    ❌ Stop Scanner
+                </button>
+                <div id="reader"></div>
+            </div>
+
+            <div class="manual-entry">
+                <p style="text-align: center; color: #666; margin-bottom: 15px; font-weight: 600;">
+                    Or enter serial number manually:
+                </p>
+                <div class="input-group">
+                    <input type="text" id="serialInput" placeholder="e.g. TS-AA-001-0015 or V1-0040101" onkeypress="handleEnter(event)">
+                    <button class="btn btn-primary" onclick="lookupSerial()" style="width: 200px; padding: 15px 30px;">
+                        Search
+                    </button>
+                </div>
+            </div>
+
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p style="margin-top: 15px; color: #666;">Loading product information...</p>
+            </div>
+
+            <div class="error" id="error"></div>
+
+            <div class="result-card" id="result">
+                <div class="result-title">Product Information</div>
+                <div id="resultContent"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Include the html5-qrcode library -->
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+
+    <script>
+        // ========================================
+        // CONFIGURATION - UPDATE THESE VALUES
+        // ========================================
+        const AIRTABLE_API_KEY = 'patUbnbEZjjqWyxzz.ac41d6c14637b4d0c951232dfc860f4634cf5a232a15306cb9f6e00886faf4af';
+        const AIRTABLE_BASE_ID = 'app1Jri8YTqG5kL31';
+        const AIRTABLE_TABLE_NAME = 'Entradas de Productos y Materias Primas';
+
+        // ========================================
+        // Scanner Variables
+        // ========================================
+        let html5QrcodeScanner = null;
+        let isScanning = false;
+
+        // ========================================
+        // Start Barcode Scanner
+        // ========================================
+        function startScanner() {
+            const readerDiv = document.getElementById('reader');
+            const scanBtn = document.getElementById('scanBtn');
+            const stopBtn = document.getElementById('stopBtn');
+
+            // Clear any previous errors
+            hideError();
+
+            readerDiv.style.display = 'block';
+            scanBtn.style.display = 'none';
+            stopBtn.style.display = 'block';
+            isScanning = true;
+
+            html5QrcodeScanner = new Html5Qrcode("reader");
+
+            // Request camera with better error handling
+            html5QrcodeScanner.start(
+                { facingMode: "environment" },
+                {
+                    fps: 10,
+                    qrbox: { width: 320, height: 70 }
+                },
+                onScanSuccess,
+                onScanError
+            ).catch(err => {
+                console.error("Camera error:", err);
+
+                // Better error messages based on error type
+                let errorMessage = "Unable to access camera. ";
+
+                if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+                    errorMessage = "Camera permission denied. Please:\n\n" +
+                                 "1. Close all other apps and browser tabs\n" +
+                                 "2. Refresh this page\n" +
+                                 "3. Tap 'Allow' when asked for camera permission\n\n" +
+                                 "Or enter the serial number manually below.";
+                } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
+                    errorMessage = "No camera found on this device. Please enter the serial number manually below.";
+                } else if (err.name === 'NotReadableError' || err.name === 'TrackStartError') {
+                    errorMessage = "Camera is being used by another app. Please:\n\n" +
+                                 "1. Close all other apps\n" +
+                                 "2. Close all browser tabs except this one\n" +
+                                 "3. Refresh this page and try again\n\n" +
+                                 "Or enter the serial number manually below.";
+                } else if (err.name === 'OverconstrainedError') {
+                    errorMessage = "Camera constraints not supported. Please enter the serial number manually below.";
+                } else if (err.name === 'SecurityError') {
+                    errorMessage = "Camera access blocked. Please:\n\n" +
+                                 "1. Make sure you're using HTTPS (secure connection)\n" +
+                                 "2. Check browser settings allow camera access\n" +
+                                 "3. Try again or enter serial number manually below.";
+                } else {
+                    errorMessage = "Unable to start camera. Please:\n\n" +
+                                 "1. Close other apps and browser tabs\n" +
+                                 "2. Refresh this page\n" +
+                                 "3. Or enter the serial number manually below.\n\n" +
+                                 "Error: " + err.message;
+                }
+
+                showError(errorMessage);
+                stopScanner();
+            });
+        }
+
+        // ========================================
+        // Stop Barcode Scanner
+        // ========================================
+        function stopScanner() {
+            if (html5QrcodeScanner && isScanning) {
+                html5QrcodeScanner.stop().then(() => {
+                    const readerDiv = document.getElementById('reader');
+                    const scanBtn = document.getElementById('scanBtn');
+                    const stopBtn = document.getElementById('stopBtn');
+
+                    readerDiv.style.display = 'none';
+                    scanBtn.style.display = 'block';
+                    stopBtn.style.display = 'none';
+                    isScanning = false;
+                });
+            }
+        }
+
+        // ========================================
+        // Scan Success Handler
+        // ========================================
+        function onScanSuccess(decodedText, decodedResult) {
+            stopScanner();
+            document.getElementById('serialInput').value = decodedText;
+            lookupSerial(decodedText);
+        }
+
+        // ========================================
+        // Scan Error Handler (silent)
+        // ========================================
+        function onScanError(error) {
+            // Ignore scan errors (they happen continuously while scanning)
+        }
+
+        // ========================================
+        // Handle Enter Key in Input
+        // ========================================
+        function handleEnter(event) {
+            if (event.key === 'Enter') {
+                lookupSerial();
+            }
+        }
+
+        // ========================================
+        // Lookup Serial Number in Airtable
+        // ========================================
+        async function lookupSerial(serialNumber) {
+            if (!serialNumber) {
+                serialNumber = document.getElementById('serialInput').value.trim().toUpperCase();
+            } else {
+                serialNumber = serialNumber.trim().toUpperCase();
+            }
+
+            if (!serialNumber) {
+                showError('Please enter a serial number');
+                return;
+            }
+
+            // Hide previous results and errors
+            hideError();
+            hideResult();
+            showLoading();
+
+            try {
+                // Parse serial number format: TS-AA-000-0000
+                const serialParts = parseSerialNumber(serialNumber);
+
+                if (!serialParts) {
+                    hideLoading();
+                    showError(`Invalid serial number format.\nExpected formats:\n• TS-AA-000-0000 (e.g., TS-AA-001-0015)\n• V1-0000000 (e.g., V1-0040101)`);
+                    return;
+                }
+
+                let filterFormula;
+                let data;
+
+                if (serialParts.searchAllProducts) {
+                    if (serialParts.isVFormat) {
+                        // V-format serial - search across new product types (17, 18, 19)
+                        filterFormula = `OR({Numero materia prima}=17, {Numero materia prima}=18, {Numero materia prima}=19)`;
+                    } else {
+                        // Numeric barcode - search across legacy product types (58, 59, 60)
+                        filterFormula = `OR({Numero materia prima}=58, {Numero materia prima}=59, {Numero materia prima}=60)`;
+                    }
+                } else {
+                    // Convert product code to Numero materia prima
+                    const productCodeMap = {
+                        'AA': 58,
+                        'AB': 59,
+                        'AC': 60
+                    };
+
+                    const productNumber = productCodeMap[serialParts.productCode];
+
+                    if (!productNumber) {
+                        hideLoading();
+                        showError(`Unknown product code: ${serialParts.productCode}. Valid codes: AA, AB, AC`);
+                        return;
+                    }
+
+                    filterFormula = `{Numero materia prima}=${productNumber}`;
+                }
+
+                // Fetch records
+                const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${encodeURIComponent(AIRTABLE_TABLE_NAME)}/listRecords`;
+
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${AIRTABLE_API_KEY}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        filterByFormula: filterFormula
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`API Error: ${response.status} - ${response.statusText}`);
+                }
+
+                data = await response.json();
+
+                // Find the record where the serial number falls within the range
+                const matchingRecord = findRecordInRange(data.records, serialParts);
+
+                hideLoading();
+
+                if (matchingRecord) {
+                    // Build the proper serial number format for display
+                    let displaySerial = serialNumber;
+
+                    if (serialParts.searchAllProducts && !serialParts.isVFormat) {
+                        // Numeric barcode - reconstruct TS format display
+                        let productNum = matchingRecord.fields['Product Type Number'] || matchingRecord.fields['Numero materia prima'];
+                        if (Array.isArray(productNum) && productNum.length > 0) {
+                            productNum = productNum[0];
+                        }
+
+                        const productCodeMap = {
+                            58: 'AA',
+                            59: 'AB',
+                            60: 'AC'
+                        };
+
+                        const productCode = productCodeMap[Number(productNum)] || 'XX';
+                        displaySerial = `TS-${productCode}-${String(serialParts.firstPart).padStart(3, '0')}-${String(serialParts.secondPart).padStart(4, '0')}`;
+                    }
+                    // V-format: displaySerial stays as entered (e.g., V1-0040101)
+
+                    displayResult(matchingRecord.fields, displaySerial);
+                } else {
+                    showError(`Serial number "${serialNumber}" not found in any production batch.`);
+                }
+
+            } catch (error) {
+                hideLoading();
+                console.error('Error:', error);
+                showError(`Error connecting to database: ${error.message}`);
+            }
+        }
+
+        // ========================================
+        // Parse Serial Number (TS-AA-000-0000, V1-0000000, or numeric barcode)
+        // ========================================
+        function parseSerialNumber(serial) {
+            // Remove any extra spaces
+            serial = serial.replace(/\s/g, '');
+
+            // Match format: TS-AA-000-0000
+            const regex = /^TS-(AA|AB|AC)-(\d{3})-(\d{4})$/i;
+            const match = serial.match(regex);
+
+            if (match) {
+                return {
+                    productCode: match[1].toUpperCase(),
+                    firstPart: parseInt(match[2], 10),
+                    secondPart: parseInt(match[3], 10),
+                    fullSerial: serial,
+                    searchAllProducts: false,
+                    isVFormat: false
+                };
+            }
+
+            // Match format: V1-0040101 (V + digit for (000) field + hyphen + digits for (0000) field)
+            const vRegex = /^V(\d)-(\d+)$/i;
+            const vMatch = serial.match(vRegex);
+
+            if (vMatch) {
+                return {
+                    productCode: null,
+                    firstPart: parseInt(vMatch[1], 10),
+                    secondPart: parseInt(vMatch[2], 10),
+                    fullSerial: serial,
+                    searchAllProducts: true,
+                    isVFormat: true
+                };
+            }
+
+            // Check if it's a numeric-only barcode (e.g., 00000000000029)
+            if (/^\d+$/.test(serial)) {
+                // Extract the last 7 digits (3 digits + 4 digits for serial parts)
+                // Example: 00000000000029 -> extract "0000029" -> 000-0029
+                const numericSerial = serial.padStart(7, '0'); // Ensure at least 7 digits
+                const last7 = numericSerial.slice(-7);
+                const firstPart = parseInt(last7.substring(0, 3), 10);
+                const secondPart = parseInt(last7.substring(3, 7), 10);
+
+                return {
+                    productCode: null, // Unknown - will search all product types
+                    firstPart: firstPart,
+                    secondPart: secondPart,
+                    fullSerial: `TS-XX-${String(firstPart).padStart(3, '0')}-${String(secondPart).padStart(4, '0')}`,
+                    searchAllProducts: true, // Flag to search across all product types
+                    isVFormat: false
+                };
+            }
+
+            return null;
+        }
+
+        // ========================================
+        // Find Record Within Range
+        // ========================================
+        function findRecordInRange(records, serialParts) {
+            for (const record of records) {
+                const fields = record.fields;
+
+                // Get range values
+                const initialFirst = fields['Número de Serie Inicial (000)'];
+                const initialSecond = fields['Número de Serie Inicial (0000)'];
+                const finalFirst = fields['Número de Serie Final (000)'];
+                const finalSecond = fields['Número de Serie Final (0000)'];
+
+                // Skip if any required field is missing
+                if (initialFirst === undefined || initialSecond === undefined ||
+                    finalFirst === undefined || finalSecond === undefined) {
+                    continue;
+                }
+
+                // Check if serial falls within range
+                if (isSerialInRange(serialParts.firstPart, serialParts.secondPart,
+                                   initialFirst, initialSecond,
+                                   finalFirst, finalSecond)) {
+                    return record;
+                }
+            }
+
+            return null;
+        }
+
+        // ========================================
+        // Check if Serial is Within Range
+        // ========================================
+        function isSerialInRange(serialFirst, serialSecond,
+                                initialFirst, initialSecond,
+                                finalFirst, finalSecond) {
+            // Convert to comparable numbers (e.g., 001-0015 becomes 10000015)
+            // Multiplier is 10000000 to support both TS format (0000 up to 9999)
+            // and V format (0000000 up to 9999999)
+            const serialNum = serialFirst * 10000000 + serialSecond;
+            const initialNum = initialFirst * 10000000 + initialSecond;
+            const finalNum = finalFirst * 10000000 + finalSecond;
+
+            return serialNum >= initialNum && serialNum <= finalNum;
+        }
+
+        // ========================================
+        // Display Result
+        // ========================================
+        function displayResult(fields, scannedSerial) {
+            const resultDiv = document.getElementById('result');
+            const contentDiv = document.getElementById('resultContent');
+
+            let html = '';
+
+            // ========================================
+            // HIGH PRIORITY FIELDS
+            // ========================================
+
+            // Authenticity Badge
+            html += `
+                <div style="background: linear-gradient(135deg, #00A19B 0%, #00A19B 100%); color: white; padding: 15px; border-radius: 10px; text-align: center; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0, 161, 155, 0.3);">
+                    <div style="font-size: 24px; margin-bottom: 5px;">✓</div>
+                    <div style="font-weight: 700; font-size: 18px;">VERIFIED GENUINE PRODUCT</div>
+                    <div style="font-size: 12px; opacity: 0.9; margin-top: 5px;">Authenticated from factory database</div>
+                </div>
+            `;
+
+            // ========================================
+            // DISPLAY ORDER (as requested):
+            // 1. Product Type
+            // 2. Serial Number
+            // 3. Temperature Range
+            // 4. Programming (Programación)
+            // 5. Quality Control
+            // 6. Production Date
+            // 7. Expiration Date
+            // 8. Manufactured By
+            // ========================================
+
+            // Get product details
+            // Try to get product number from lookup field first, then from linked record
+            let productNum = fields['Product Type Number'] || fields['Numero materia prima'];
+
+            // If it's a lookup field, it might return an array - get first value
+            if (Array.isArray(productNum) && productNum.length > 0) {
+                productNum = productNum[0];
+            }
+
+            let productCode = '';
+            let productDescription = '';
+            let temperatureRange = '';
+
+            if (productNum !== undefined && productNum !== null && productNum !== '') {
+                // Convert to number or parse string to ensure proper comparison
+                let productNumValue = productNum;
+
+                // If it's a string, try to parse the number
+                if (typeof productNum === 'string') {
+                    productNumValue = parseInt(productNum, 10);
+                } else {
+                    productNumValue = Number(productNum);
+                }
+
+                if (productNumValue === 58 || productNumValue === 17) {
+                    productCode = productNumValue === 58 ? 'AA' : 'V';
+                    productDescription = 'Single-use Temperature Datalogger';
+                    temperatureRange = '-20°C to +60°C';
+                } else if (productNumValue === 59 || productNumValue === 18) {
+                    productCode = productNumValue === 59 ? 'AB' : 'V';
+                    productDescription = 'Frozen Temperature Datalogger';
+                    temperatureRange = '-30°C to +60°C';
+                } else if (productNumValue === 60 || productNumValue === 19) {
+                    productCode = productNumValue === 60 ? 'AC' : 'V';
+                    productDescription = 'Temperature & Humidity Datalogger';
+                    temperatureRange = '-20°C to +60°C';
+                }
+            }
+
+            // 1. Product Type
+            if (productDescription) {
+                html += `
+                    <div class="info-row">
+                        <span class="info-label">Product Type:</span>
+                        <span class="info-value"><strong>${productDescription}</strong> (${productCode})</span>
+                    </div>
+                `;
+            }
+
+            // 2. Serial Number
+            if (scannedSerial) {
+                html += `
+                    <div class="info-row">
+                        <span class="info-label">Serial Number:</span>
+                        <span class="info-value"><strong>${scannedSerial}</strong></span>
+                    </div>
+                `;
+            }
+
+            // 3. Temperature Range
+            if (temperatureRange) {
+                html += `
+                    <div class="info-row">
+                        <span class="info-label">Temperature Range:</span>
+                        <span class="info-value">${temperatureRange}</span>
+                    </div>
+                `;
+            }
+
+            // 4. Programming Type (Programación - multiple choice field)
+            let programming = fields['Programación'] || fields['Programming'];
+
+            // If it's an array (multiple choice), format it nicely
+            if (Array.isArray(programming)) {
+                programming = programming.join(', ');
+            }
+
+            if (programming) {
+                html += `
+                    <div class="info-row">
+                        <span class="info-label">Programming:</span>
+                        <span class="info-value">${programming}</span>
+                    </div>
+                `;
+            }
+
+            // 5. Quality Control Checks (All products pass these)
+            html += `
+                <div class="info-row">
+                    <span class="info-label">Quality Control:</span>
+                    <span class="info-value">
+                        <span class="qc-status qc-pass">✓ Battery</span>
+                        <span class="qc-status qc-pass" style="margin-left: 8px;">✓ PCB Board</span>
+                        <span class="qc-status qc-pass" style="margin-left: 8px;">✓ Temperature</span>
+                    </span>
+                </div>
+            `;
+
+            // 6. Production Date
+            const mfgDate = fields['entrada del stock'] || fields['stock entry'] || fields['Fecha de Fabricación'] ||
+                           fields['Fecha de Producción'] || fields['Manufacturing Date'] || fields['Production Date'] || fields['Fecha'];
+            if (mfgDate) {
+                html += `
+                    <div class="info-row">
+                        <span class="info-label">Production Date:</span>
+                        <span class="info-value">${formatDate(mfgDate)}</span>
+                    </div>
+                `;
+
+                // 7. Expiration Date (Calculated: Production Date + 2 years)
+                const mfgDateObj = new Date(mfgDate);
+                const expDateObj = new Date(mfgDateObj);
+                expDateObj.setFullYear(expDateObj.getFullYear() + 2);
+
+                const today = new Date();
+                const daysUntilExp = Math.floor((expDateObj - today) / (1000 * 60 * 60 * 24));
+
+                let expWarning = '';
+                if (daysUntilExp < 0) {
+                    expWarning = ' <span style="color: #c33; font-weight: 600;">(EXPIRED)</span>';
+                } else if (daysUntilExp < 90) {
+                    expWarning = ` <span style="color: #ff8800; font-weight: 600;">(${daysUntilExp} days remaining)</span>`;
+                } else {
+                    expWarning = ` <span style="color: #28a745; font-weight: 600;">(${daysUntilExp} days remaining)</span>`;
+                }
+
+                html += `
+                    <div class="info-row">
+                        <span class="info-label">Expiration Date:</span>
+                        <span class="info-value">${formatDate(expDateObj)}${expWarning}</span>
+                    </div>
+                `;
+            }
+
+            // 8. Manufactured By
+            const manufacturer = fields['Persona Fabricación'] || fields['person manufacturing'] ||
+                               fields['Manufactured By'] || fields['Fabricado por'] || fields['Operador'];
+            if (manufacturer) {
+                html += `
+                    <div class="info-row">
+                        <span class="info-label">Manufactured By:</span>
+                        <span class="info-value">${manufacturer}</span>
+                    </div>
+                `;
+            }
+
+            // ========================================
+            // ADDITIONAL FIELDS (Optional - if you want to show more)
+            // ========================================
+
+            // Battery Lot Number (optional - can be enabled if needed)
+            // const batteryLot = fields['Lote Baterias'] || fields['Battery Lot'] || fields['Lote de Baterías'];
+            // if (batteryLot) {
+            //     html += `
+            //         <div class="info-row">
+            //             <span class="info-label">Battery Lot Number:</span>
+            //             <span class="info-value">${batteryLot}</span>
+            //         </div>
+            //     `;
+            // }
+
+            // Display all other fields that weren't specifically handled
+            const excludeFields = [
+                // Serial number fields
+                'Serial Number', 'Número de Serie Inicial (000)', 'Número de Serie Inicial (0000)',
+                'Número de Serie Final (000)', 'Número de Serie Final (0000)', 'Numero materia prima',
+                'Product Type Number',  // Lookup field for product type
+
+                // Date fields
+                'entrada del stock', 'stock entry', 'Manufacturing Date', 'Production Date',
+                'Fecha de Fabricación', 'Fecha de Producción',
+                'QC Date', 'Date', 'Fecha QC', 'Fecha de Control de Calidad', 'Quality Control Date', 'Fecha',
+                'Expiration Date', 'Expires', 'Best Before', 'Fecha de Vencimiento', 'Fecha de Expiración',
+
+                // QC fields
+                'QC Status', 'Quality Control', 'Estado QC', 'Estado de Control de Calidad', 'Control de Calidad',
+
+                // Programming fields
+                'Programming', 'Program Details', 'Programación', 'Detalles de Programación',
+                'Programmer', 'Programmed By', 'Programado por', 'Técnico',
+
+                // Product fields
+                'Product', 'Model', 'Product Type', 'Tipo de Producto',
+                'Nombre de Materia Prima (de Producto)',
+
+                // Manufacturing fields (now explicitly handled above)
+                'Persona Fabricación', 'person manufacturing', 'Manufactured By', 'Fabricado por', 'Operador',
+                'Lote Placas', 'pcb lot', 'PCB Lot', 'Lote PCB',
+                'Lote Baterias', 'Battery Lot', 'Lote de Baterías',
+
+                // Hide these fields
+                'Cantidad', 'quantity', 'Quantity',
+                'informacion entrada',  // Entry information - internal use only
+                'Semana', 'Mes', 'Fecha Jornada'
+            ];
+
+            for (const [key, value] of Object.entries(fields)) {
+                if (!excludeFields.includes(key)) {
+                    if (value && value !== '' && value !== null && value !== undefined) {
+                        html += `
+                            <div class="info-row">
+                                <span class="info-label">${key}:</span>
+                                <span class="info-value">${formatValue(value)}</span>
+                            </div>
+                        `;
+                    }
+                }
+            }
+
+            contentDiv.innerHTML = html;
+            resultDiv.classList.add('show');
+        }
+
+        // ========================================
+        // Helper Functions
+        // ========================================
+        function formatDate(dateString) {
+            if (!dateString) return 'N/A';
+            const date = new Date(dateString);
+            // Format: DD/MM/YYYY (European format)
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const year = date.getFullYear();
+            return `${day}/${month}/${year}`;
+        }
+
+        function formatValue(value) {
+            if (Array.isArray(value)) {
+                return value.join(', ');
+            }
+            return value;
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('error');
+            errorDiv.textContent = message;
+            errorDiv.classList.add('show');
+        }
+
+        function hideError() {
+            const errorDiv = document.getElementById('error');
+            errorDiv.classList.remove('show');
+        }
+
+        function showLoading() {
+            document.getElementById('loading').classList.add('show');
+        }
+
+        function hideLoading() {
+            document.getElementById('loading').classList.remove('show');
+        }
+
+        function hideResult() {
+            document.getElementById('result').classList.remove('show');
+        }
+    </script>
+</body>
+</html>
